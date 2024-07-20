@@ -59,20 +59,18 @@ func main() {
 	log.Printf("walk took %s", time.Since(start))
 
 	output := []struct {
-		text    string
-		value   any
-		leftpad int
+		text  string
+		value any
 	}{
-		{"", "", 0},
-		{"direfold: ", path, 0},
-		{"---", "", 0},
-		{"size: ", humanize.Bytes(uint64(sizes)), 10},
-		{"files: ", humanize.Comma(files), 13},
-		{"directories: ", humanize.Comma(dirs), 0},
+		{"", ""},
+		{"direfold: ", path},
+		{"---", ""},
+		{"size:    ", humanize.Bytes(uint64(sizes))},
+		{"files:   ", humanize.Comma(files)},
+		{"folders: ", humanize.Comma(dirs)},
 	}
 
 	for _, line := range output {
-		// fmt.Printf("%s%*s\n", line.text, line.leftpad, line.value)
 		fmt.Printf("%s%s\n", line.text, line.value)
 	}
 
