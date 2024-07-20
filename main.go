@@ -69,7 +69,7 @@ func main() {
 
 	output := []struct {
 		text  string
-		value any
+		value string
 	}{
 		{"", ""},
 		{"direfold: ", path},
