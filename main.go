@@ -1,11 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/dustin/go-humanize"
 )
@@ -20,10 +22,13 @@ func main() {
 
 	var dirs int64
 	var files int64
+	var sizes int64
 
 	walkFunc := func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
+		if errors.Is(err, fs.ErrPermission) {
+			log.Println(err)
+		} else if err != nil {
+			return fmt.Errorf("walk func err: %w", err)
 		}
 
 		if d.Type().IsDir() {
@@ -31,16 +36,27 @@ func main() {
 		}
 		if d.Type().IsRegular() {
 			files++
+
+			info, err := d.Info()
+			if err != nil {
+				return fmt.Errorf("can't get file info: %w", err)
+			}
+
+			sizes += info.Size()
 		}
 
 		return nil
 	}
+
+	start := time.Now()
 
 	err := filepath.WalkDir(path, walkFunc)
 	if err != nil {
 		log.Printf("can't walk dir: %v", err)
 		return
 	}
+
+	log.Printf("walk took %s", time.Since(start))
 
 	output := []struct {
 		text    string
@@ -50,7 +66,7 @@ func main() {
 		{"", "", 0},
 		{"direfold: ", path, 0},
 		{"---", "", 0},
-		{"size: ", humanize.Bytes(0), 10},
+		{"size: ", humanize.Bytes(uint64(sizes)), 10},
 		{"files: ", humanize.Comma(files), 13},
 		{"directories: ", humanize.Comma(dirs), 0},
 	}
