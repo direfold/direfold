@@ -7,10 +7,13 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
 )
+
+var ignore = []string{"/proc/", "/sys/", "/run/"}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -25,6 +28,12 @@ func main() {
 	var sizes int64
 
 	walkFunc := func(path string, d fs.DirEntry, err error) error {
+		for _, prefix := range ignore {
+			if strings.HasPrefix(path, prefix) {
+				return fs.SkipDir
+			}
+		}
+
 		if errors.Is(err, fs.ErrPermission) {
 			log.Println(err)
 		} else if err != nil {
@@ -39,7 +48,7 @@ func main() {
 
 			info, err := d.Info()
 			if err != nil {
-				return fmt.Errorf("can't get file info: %w", err)
+				return fmt.Errorf("can't get fileinfo for path %q: %w", path, err)
 			}
 
 			sizes += info.Size()
