@@ -52,8 +52,13 @@ flags:
 			}
 		}
 
+		if errors.Is(err, fs.ErrNotExist) {
+			printmsg("cannot access '%s': No such file or directory", path)
+			os.Exit(2)
+		}
+
 		if errors.Is(err, fs.ErrPermission) {
-			log.Println(err)
+			printmsg("%s: Permission denied", path)
 		} else if err != nil {
 			return fmt.Errorf("walk func err: %w", err)
 		}
@@ -86,7 +91,7 @@ flags:
 		value string
 	}{
 		{"", ""},
-		{"direfold: ", path},
+		{"direfold: ", strings.ReplaceAll(path, os.Getenv("HOME"), "~")},
 		{"---", ""},
 		{"size:    ", humanize.Bytes(uint64(sizes))},
 		{"files:   ", humanize.Comma(files)},
@@ -101,4 +106,10 @@ flags:
 		fmt.Println()
 		log.Printf("searched for %s :)", time.Since(start))
 	}
+}
+
+func printmsg(message string, args ...any) {
+	name := os.Args[0]
+	msg := fmt.Sprintf(message, args...)
+	fmt.Fprintf(os.Stderr, "%s: %s\n", name, msg)
 }
