@@ -36,7 +36,10 @@ flags:
 		path = args[0]
 	}
 
-	path = filepath.Clean(path)
+	path, err := filepath.Abs(path)
+	if err != nil {
+		panic(err)
+	}
 
 	var dirs int64
 	var files int64
@@ -73,9 +76,7 @@ flags:
 	}
 
 	start := time.Now()
-
-	err := filepath.WalkDir(path, walkFunc)
-	if err != nil {
+	if err := filepath.WalkDir(path, walkFunc); err != nil {
 		log.Printf("can't walk dir: %v", err)
 		return
 	}
@@ -96,9 +97,8 @@ flags:
 		fmt.Printf("%s%s\n", line.text, line.value)
 	}
 
-	fmt.Println()
-
 	if verbose {
+		fmt.Println()
 		log.Printf("searched for %s :)", time.Since(start))
 	}
 }
