@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io/fs"
 	"log"
@@ -16,12 +17,26 @@ import (
 var ignore = []string{"/proc/", "/sys/", "/run/"}
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Printf("usage: %s [path to directory]\n", os.Args[0])
-		return
+	var verbose bool
+	flag.BoolVar(&verbose, "v", false, "verbose logs")
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, `usage: %s [flags] [path]
+
+default [path] is "."
+
+flags:
+`, os.Args[0])
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	var path string
+	if args := flag.Args(); len(args) > 0 {
+		path = args[0]
 	}
 
-	path := filepath.Clean(os.Args[1])
+	path = filepath.Clean(path)
 
 	var dirs int64
 	var files int64
@@ -65,8 +80,6 @@ func main() {
 		return
 	}
 
-	log.Printf("walk took %s", time.Since(start))
-
 	output := []struct {
 		text  string
 		value string
@@ -84,4 +97,8 @@ func main() {
 	}
 
 	fmt.Println()
+
+	if verbose {
+		log.Printf("searched for %s :)", time.Since(start))
+	}
 }
